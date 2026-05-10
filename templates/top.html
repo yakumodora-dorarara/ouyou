@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block contents %}
+
+<!-- ✅ 投稿フォーム -->
+<div style="margin-bottom:20px;">
+    <form action="{{ url_for('write') }}" method="POST">
+        <input type="hidden" name="user_name" value="{{ login_user_name }}">
+        <input type="text" name="contents" placeholder="投稿を書く" style="width:70%;">
+        <input type="submit" value="投稿">
+    </form>
+</div>
+
+<hr>
+
+<!-- ✅ 親投稿だけ抽出 -->
+{% set parents = [] %}
+{% for m in message_list %}
+    {% if not m.parent_id %}
+        {% set _ = parents.append(m) %}
+    {% endif %}
+{% endfor %}
+
+{% set total = parents|length %}
+
+{% for message in parents %}
+{% set parent_no = total - loop.index + 1 %}
+
+<div style="border:1px solid #ccc;margin:10px;padding:10px;">
+
+<!-- ✅ ✅ 番号付き（ここが今回のポイント🔥） -->
+<b>{{ parent_no }}. {{ message.user_name }}</b><br>
+{{ message.contents }}
+
+<br><br>
+
+<!-- ✅ replies取得 -->
+{% set replies = [] %}
+{% for r in message_list %}
+    {% if r.parent_id == message._id|string %}
+        {% set _ = replies.append(r) %}
+    {% endif %}
+{% endfor %}
+
+<!-- ✅ 操作バー -->
+<div style="display:flex; justify-content:space-between;">
+
+    <!-- 左 -->
+    <div>
+        <a href="{{ url_for('update', message_id=message._id) }}">更新</a> |
+        <a href="{{ url_for('delete', message_id=message._id) }}">削除</a>
+    </div>
+
+    <!-- 右 -->
+    <div onclick="toggleReply('{{ message._id }}')" style="cursor:pointer;color:blue;">
+        返信 ({{ replies|length }}件)
+    </div>
+
+</div>
+
+<!-- ✅ 返信フォーム -->
+<div id="form-{{ message._id }}" style="display:none; margin-top:10px;">
+    <form action="{{ url_for('write') }}" method="POST">
+        <input type="hidden" name="parent_id" value="{{ message._id }}">
+        <input type="hidden" name="user_name" value="{{ login_user_name }}">
+        <input type="text" name="contents" placeholder="返信を書く">
+        <input type="submit" value="返信">
+    </form>
+</div>
+
+<!-- ✅ 返信一覧 -->
+<div id="reply-{{ message._id }}" style="display:none; margin-top:10px;">
+    {% for reply in replies %}
+    <div style="margin-left:30px;border-left:2px solid #ccc;padding-left:10px;">
+        <b>{{ parent_no }}-{{ loop.index }}. {{ reply.user_name }}</b><br>
+        {{ reply.contents }}
+    </div>
+    {% endfor %}
+</div>
+
+</div>
+
+{% endfor %}
+
+<script>
+function toggleReply(id) {
+    const r = document.getElementById("reply-" + id);
+    const f = document.getElementById("form-" + id);
+
+    if (r.style.display === "none") {
+        r.style.display = "block";
+        f.style.display = "block";
+    } else {
+        r.style.display = "none";
+        f.style.display = "none";
+    }
+}
+</script>
+
+{% endblock %}

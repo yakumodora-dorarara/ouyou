@@ -1,0 +1,20 @@
+<h2>ログイン</h2>
+
+<form method="POST">
+    ユーザー名: <input name="username"><br>
+    パスワード: <input type="password" name="password"><br>
+    <input type="submit" value="ログイン">
+</form>
+
+<hr>
+
+<h3>テスト用ユーザー</h3>
+
+<ul>
+{% for user in users %}
+<li>
+    ID: {{ user.username }}  
+    PASS: {{ user.raw_password if user.raw_password else "不明" }}
+</li>
+{% endfor %}
+</ul>
